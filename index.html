@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Firestore Restaurant Form</title>
+    <script
+      src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"
+      type="module"
+    ></script>
+    <script
+      src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"
+      type="module"
+    ></script>
+  </head>
+  <body>
+    <h1>가게 정보 입력</h1>
+    <form id="restaurantForm">
+      <label>가게 이름:<input type="text" id="name" required /></label
+      ><br /><br />
+      <label>연락처:<input type="text" id="contact" required /></label
+      ><br /><br />
+      <label>주소:<input type="text" id="address" required /></label
+      ><br /><br />
+      <label
+        >1인당 가격:<input type="text" id="pricePerPerson" required /></label
+      ><br /><br />
+      <label
+        >특이점:<br />
+        <textarea
+          id="features"
+          rows="4"
+          cols="40"
+          placeholder="줄바꿈으로 여러 개 입력 가능"
+        ></textarea></label
+      ><br /><br />
+      <label
+        >메뉴:<br />
+        <textarea
+          id="menu"
+          rows="6"
+          cols="40"
+          placeholder="예: 비빔밥 8000"
+        ></textarea></label
+      ><br /><br />
+      <button type="submit">저장하기</button>
+    </form>
+    <pre id="output"></pre>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+      import {
+        getFirestore,
+        collection,
+        addDoc,
+      } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+      // Firebase 설정값 붙여넣기
+      const firebaseConfig = {
+        apiKey: "AIzaSyCpWFE7yW42VTW9esyAxa-fCMsmonlrOG0",
+        authDomain: "sdbg-food.firebaseapp.com",
+        projectId: "sdbg-food",
+        storageBucket: "sdbg-food.firebasestorage.app",
+        messagingSenderId: "835905877493",
+        appId: "1:835905877493:web:18c406faab61d88db39cbc",
+        measurementId: "G-12KWSZX0TH",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      document
+        .getElementById("restaurantForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const name = document.getElementById("name").value.trim();
+          const contact = document.getElementById("contact").value.trim();
+          const address = document.getElementById("address").value.trim();
+          const pricePerPerson = document
+            .getElementById("pricePerPerson")
+            .value.trim();
+
+          const featuresText = document.getElementById("features").value.trim();
+          const features = featuresText
+            ? featuresText
+                .split(/\n+/)
+                .map((f) => f.trim())
+                .filter((f) => f)
+            : [];
+
+          const menuText = document.getElementById("menu").value.trim();
+          const menu = menuText
+            ? menuText
+                .split(/\n+/)
+                .map((line) => {
+                  const parts = line.trim().split(/\s+/);
+                  return { name: parts[0] || "", price: parts[1] || "" };
+                })
+                .filter((item) => item.name && item.price)
+            : [];
+
+          const data = {
+            name,
+            contact,
+            address,
+            pricePerPerson,
+            features,
+            menu,
+          };
+
+          try {
+            const docRef = await addDoc(collection(db, "restaurants"), data);
+            document.getElementById("output").textContent =
+              `저장 완료: ${docRef.id}\n` + JSON.stringify(data, null, 2);
+          } catch (error) {
+            document.getElementById("output").textContent =
+              "에러 발생: " + error;
+          }
+        });
+    </script>
+  </body>
+</html>
